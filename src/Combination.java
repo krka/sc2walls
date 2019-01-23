@@ -1,3 +1,5 @@
+import java.util.Locale;
+
 public class Combination implements HasSize {
   private final Structure first;
   private final Structure second;
@@ -12,14 +14,23 @@ public class Combination implements HasSize {
     this.offsetX = offsetX;
     this.offsetY = offsetY;
 
-    double firstX = first.radius;
-    double firstY = first.radius;
-    double secondX = offsetX + second.radius;
-    double secondY = offsetY + second.radius;
-    double dx = firstX - secondX;
-    double dy = firstY - secondY;
-    double distance = Math.sqrt(dx * dx + dy * dy);
-    width = distance - first.radius - second.radius;
+    final Polygon firstPolygon = first.getPolygon();
+    final Polygon secondPolygon = second.getPolygon().add(new Point(offsetX, offsetY));
+    width = shortestDistance(firstPolygon, secondPolygon);
+  }
+
+  private double shortestDistance(Polygon a, Polygon b) {
+    double min = Double.MAX_VALUE;
+
+    for (Point point : a.getPoints()) {
+      double newMin = b.distance(point);
+      min = Math.min(min, newMin);
+    }
+    for (Point point : b.getPoints()) {
+      double newMin = a.distance(point);
+      min = Math.min(min, newMin);
+    }
+    return min;
   }
 
   @Override
@@ -41,8 +52,8 @@ public class Combination implements HasSize {
       }
       sb.append('\n');
     }
-    //sb.append("Size: ").append(this.width);
-    //sb.append('\n');
+    sb.append(String.format(Locale.ROOT, "(%.3f)", this.width));
+    sb.append('\n');
     return sb.toString();
   }
 

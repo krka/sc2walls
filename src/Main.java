@@ -1,10 +1,8 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Main {
 
@@ -27,11 +25,13 @@ public class Main {
     }
 
     combinations.sort(Comparator.comparingDouble(HasSize::getSize));
-    List<List<HasSize>> partitions = partition(combinations);
-    for (List<HasSize> partition : partitions) {
+    for (List<HasSize> partition : partition(combinations, HasSize::getClass)) {
       if (partition.iterator().next() instanceof Unit) {
-        for (List<HasSize> units : partition(partition, 10)) {
-          System.out.println(String.join(", ", (Iterable<String>) units.stream().map(Object::toString)::iterator));
+        for (List<HasSize> bySize : partition(partition, HasSize::getSize)) {
+          for (List<HasSize> units : partition(bySize, 10)) {
+            System.out.println(String.join(", ", (Iterable<String>) units.stream().map(Object::toString)::iterator));
+          }
+          System.out.printf("(%.3f)\n", bySize.iterator().next().getSize());
         }
         System.out.println();
       } else {
@@ -41,26 +41,6 @@ public class Main {
 
       }
     }
-  }
-
-  private static List<List<HasSize>> partition(final ArrayList<HasSize> combinations) {
-    ArrayList<List<HasSize>> result = new ArrayList<>();
-    Class<? extends HasSize> prev = null;
-    ArrayList<HasSize> current = null;
-    for (HasSize combination : combinations) {
-      if (combination.getClass() != prev) {
-        if (current != null) {
-          result.add(current);
-        }
-        current = new ArrayList<>();
-        prev = combination.getClass();
-      }
-      current.add(combination);
-    }
-    if (!current.isEmpty()) {
-      result.add(current);
-    }
-    return result;
   }
 
   private static String joinLines(List<String> list) {
@@ -113,5 +93,26 @@ public class Main {
     return result;
   }
 
+  private static <T> List<List<T>> partition(List<T> stream, Function<T, ?> function) {
+    ArrayList<List<T>> result = new ArrayList<>();
+    ArrayList<T> current = new ArrayList<>();
+
+    Object prev = new Object();
+    for (T obj : stream) {
+      Object val = function.apply(obj);
+      if (!Objects.equals(prev, val)) {
+        if (!current.isEmpty()) {
+          result.add(current);
+          current = new ArrayList<>();
+        }
+        prev = val;
+      }
+      current.add(obj);
+    }
+    if (!current.isEmpty()) {
+      result.add(current);
+    }
+    return result;
+  }
 
 }
