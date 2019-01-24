@@ -49,6 +49,6 @@ public enum Unit implements HasSize {
 
   @Override
   public double getSize() {
-    return innerRadius * 2.0;
+    return innerRadius * 1.48;
   }
 }
